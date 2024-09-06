@@ -18,7 +18,7 @@ def split_into_batches(items, batch_size):
         yield full_list[i:i + batch_size]
 
 
-def create_filename(title, file_extension, content_document_id, output_directory, filename_pattern):
+def create_filename(title, file_extension, content_document_id, output_directory, parent_object_id, filename_pattern):
     # Create filename
     if os.name == 'nt':
         # on windows, this is harder 
@@ -36,24 +36,24 @@ def create_filename(title, file_extension, content_document_id, output_directory
         clean_title = filter(lambda i: i not in bad_chars, title)
         clean_title = ''.join(list(clean_title))
 
-    filename = filename_pattern.format(output_directory, content_document_id, clean_title, file_extension)
+    filename = filename_pattern.format(output_directory, content_document_id, clean_title, file_extension, parent_object_id)
     return filename
 
 
-def get_content_document_ids(sf, output_directory, query):
+# def get_content_document_ids(sf, output_directory, query):
 
-    results_path = output_directory + 'files.csv'
-    content_document_ids = set()
-    content_documents = sf.query_all(query)
+#     results_path = output_directory + 'files.csv'
+#     content_document_ids = set()
+#     content_documents = sf.query_all(query)
 
-    for content_document in content_documents["records"]:
-        content_document_ids.add(content_document["ContentDocumentId"])
-        filename = create_filename(content_document["ContentDocument"]["Title"],
-                                    content_document["ContentDocument"]["FileExtension"],
-                                    content_document["ContentDocumentId"],
-                                    output_directory)
+#     for content_document in content_documents["records"]:
+#         content_document_ids.add(content_document["ContentDocumentId"])
+#         filename = create_filename(content_document["ContentDocument"]["Title"],
+#                                     content_document["ContentDocument"]["FileExtension"],
+#                                     content_document["ContentDocumentId"],
+#                                     output_directory)
 
-    return content_document_ids
+#     return content_document_ids
 
 
 def download_file(args):
@@ -75,7 +75,7 @@ def download_file(args):
                                           "Content-Type": "application/octet-stream"})
     if response.ok:
         # Save File
-        filename = create_filename(title, file_extension, content_document_id, output_directory,
+        filename = create_filename(title, file_extension, content_document_id, output_directory, linked_entity_id,
                                    filename_pattern=filename_pattern)
         with open(filename, "wb") as output_file:
             output_file.write(response.content)
@@ -134,10 +134,12 @@ def main():
     parser = argparse.ArgumentParser(description='Export ContentVersion (Files) from Salesforce')
     parser.add_argument('-q', '--query', metavar='query', required=True,
                         help='SOQL to limit the valid ContentDocumentIds. Must return the Ids of parent objects.')
+    parser.add_argument('-d', '--subdirectory', metavar='subdirectory', required=True,
+                        help='Subdirectory to main directory')
     parser.add_argument('-o', '--object', metavar='object', required=False, default='ContentDocumentLink',
                         help='How are the ContentDocument selected, via \'ContentDocumentLink\' (default) or '
                              'directly from \'ContentDocument\'')
-    parser.add_argument('-f', '--filenamepattern', metavar='filenamepattern', required=False, default='{0}{1}-{2}.{3}',
+    parser.add_argument('-f', '--filenamepattern', metavar='filenamepattern', required=False, default='{0}{4}-{1}-{2}.{3}',
                         help='Specify the filename pattern for the output, available values are:'
                              '{0} = output_directory, {1} = content_document_id, {2} title, {3} file_extension, '
                              'Default value is: {0}{1}-{2}.{3} which will be '
@@ -163,7 +165,7 @@ def main():
     else:
         domain = 'login'
 
-    output_directory = config['salesforce']['output_dir']
+    output_directory = os.path.join(config['salesforce']['output_dir'], args.subdirectory) + os.sep
     batch_size = int(config['salesforce']['batch_size'])
     loglevel = logging.getLevelName(config['salesforce']['loglevel'])
 

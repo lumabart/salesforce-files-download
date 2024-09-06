@@ -47,6 +47,7 @@ optional arguments:
 python download.py -q 
 "SELECT Id FROM Custom_Object__c WHERE Status__c = 'Approved'"
 ```
+python download.py -q "SELECT Id FROM Car_Delivery__c WHERE Id = 'a112o00000M36RaAAJ'" -d Delivery
 
 You can also select directly from the ContentDocument Table and then you give the WHERE clause for the ContentDocument Query
 ```
