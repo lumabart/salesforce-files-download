@@ -23,7 +23,7 @@ def create_filename(title, file_extension, content_document_id,
                     output_directory, parent_object_id, grouping_folder, filename_pattern):
     # sanitize title
     if os.name == 'nt':
-        bad_chars = re.compile(r'[^A-Za-z0-9_. ]+|^\.|\.$|^ | $|^$')
+        bad_chars = re.compile(r'[^A-Za-z0-9_ ]+|[.,]|^\.|\.$|^ | $|^$')
         bad_names = re.compile(r'(aux|com[1-9]|con|lpt[1-9]|prn)(\.|$)', re.IGNORECASE)
         clean_title = bad_chars.sub('_', title)
         if bad_names.match(clean_title):
@@ -65,7 +65,7 @@ def download_file(args):
         of_id = od_info.get('Order_fulfillment__c', '')
         doc_name = od_info.get('Name__c', '')
         doc_type = od_info.get('Type__c', '')
-        doc_roles = od_info.get('Used_For_Roles__c', '')
+        doc_roles = (od_info.get('Used_For_Roles__c') or 'R').replace(';', '_')
         linked_entity_name = od_info.get('Name', 'NO_NAME')
 
         grouping_folder = f"{of_name}-{of_id}{os.sep}{doc_name}-{doc_type}-{doc_roles}-{linked_id}{os.sep}"
@@ -96,6 +96,21 @@ def download_file(args):
             output_directory, linked_id, grouping_folder,
             filename_pattern
         )
+
+        filename_length = len(filename)
+        
+        if filename_length > 250:
+            extra_signs = filename_length - 250
+            logging.info(f"Filename Length {len(filename)} : {title}")
+            title = title[:-extra_signs]
+            filename = create_filename(
+                title, file_extension, content_document_id,
+                output_directory, linked_id, grouping_folder,
+                filename_pattern
+            )
+            logging.info(f"Filename Length 2 {len(filename)} : {title}")
+
+        
         logging.debug(f"Saving file to {filename!r}")
 
         try:
