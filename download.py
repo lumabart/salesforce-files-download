@@ -195,7 +195,7 @@ def main():
     if args.object == 'ContentDocumentLink':
         content_document_query = 'SELECT ContentDocumentId, LinkedEntityId, LinkedEntity.Name, ContentDocument.Title, ' \
                                  'ContentDocument.FileExtension FROM ContentDocumentLink ' \
-                                 'WHERE LinkedEntityId in ({0})'.format(args.query)
+                                 'WHERE ContentDocument.FileType != \'SNOTE\' AND LinkedEntityId in ({0})'.format(args.query)
         content_document_id_name = 'ContentDocumentId'
     elif args.object == 'ContentDocument':
         content_document_query = 'SELECT Id, Title, FileExtension FROM ContentDocument {0}'.format(args.query).strip()
