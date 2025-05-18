@@ -183,7 +183,7 @@ def fetch_files(sf, content_document_links,
             od_query = f"""
                 SELECT Id, Name, Order_fulfillment__c, Order_fulfillment__r.Name, Name__c, Type__c, Used_For_Roles__c
                 FROM Order_Document__c
-                WHERE Order_fulfillment__r.Is_canceled__c = false AND Id IN ({ids_str})
+                WHERE Id IN ({ids_str})
             """
             for od in sf.query_all(od_query)['records']:
                 # logging.info(json.dumps(od, indent=4, ensure_ascii=False))
@@ -284,7 +284,7 @@ def main():
         cdl_query = (
             'SELECT ContentDocumentId, LinkedEntityId '
             'FROM ContentDocumentLink '
-            'WHERE ContentDocument.FileType != \'SNOTE\' AND LinkedEntityId IN (SELECT Id from Order_Document__c WHERE Order_fulfillment__r.Is_canceled__c = false)'
+            'WHERE ContentDocument.FileType != \'SNOTE\' AND LinkedEntityId IN (SELECT Id from Order_Document__c WHERE Order_Fulfillment__c != null and Order_fulfillment__r.Is_canceled__c = false)'
             # 'LIMIT 10'
         )
         content_document_id_name = 'ContentDocumentId'
